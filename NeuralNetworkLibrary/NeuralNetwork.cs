@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace NeuralNetworkLibrary
 {
@@ -43,7 +44,7 @@ namespace NeuralNetworkLibrary
             this.activationFunction = ActivationFunctions.Sigmoid;
         }
 
-        public double[] FeedForward(double[] inputArray)
+        public double[] Predict(double[] inputArray)
         {
             // Generating hidden outputs
             Matrix input = new Matrix(inputArray);
@@ -71,7 +72,7 @@ namespace NeuralNetworkLibrary
         }
         public void Train(double[] inputArray, double[] targetArray)
         {
-            var feedForward = this.FeedForwardWithHidden(inputArray);
+            var feedForward = FeedForwardWithHidden(inputArray);
             var inputs = new Matrix(inputArray);
             var outputs = new Matrix(feedForward[0]);
             var hiddens = new Matrix(feedForward[1]);
@@ -102,8 +103,31 @@ namespace NeuralNetworkLibrary
             this.weights.inputHiddenBias += hiddenGradient;
 
         }
-
-
+        public void RandomTrain(List<double[]> inputArrays, List<double[]> targetArrays, int iterations = -1, bool consoleLog = false, int consoleLogRepeat = 1000)
+        {
+            if (iterations == -1)
+                iterations = (int)Math.Floor(100000.0 / hiddenNodes);
+            if (iterations < 1000)
+                iterations = 1000;
+            if (inputArrays.Count != targetArrays.Count)
+                return;
+            Stopwatch s = new Stopwatch();
+            s.Start();
+            Random r = new Random();
+            for (var i = 0; i < iterations; i++)
+            {
+                var index = (int)Math.Floor(r.NextDouble() * inputArrays.Count);
+                this.Train(inputArrays[index], targetArrays[index]);
+                if (consoleLog && (i + 1) % consoleLogRepeat == 0)
+                {
+                    Console.WriteLine("Trained for " + (i + 1).ToString() + " iterations");
+                }
+            }
+            s.Stop();
+            if (consoleLog)
+                Console.WriteLine(iterations.ToString() + " training iterations completed on " + hiddenNodes.ToString()
+                + " hidden neurons in " + s.ElapsedMilliseconds.ToString() + "ms");
+        }
 
         public struct Weights
         {
